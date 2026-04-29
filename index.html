@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>에스패밀리 코트 관리</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f7f5; max-width: 480px; margin: 0 auto; min-height: 100vh; }
@@ -108,9 +107,28 @@
 </div>
 
 <script>
-const SB_URL = "https://yuvwtyljcipcgotzonkc.supabase.co";
+const SB_URL = "https://yuvwtyljcipcgotzonkc.supabase.co/rest/v1";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1dnd0eWxqY2lwY2dvdHpvbmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTk3NjUsImV4cCI6MjA5Mjk3NTc2NX0.DQkCV-LouCF7nb52n1dTlqD_PWRMPVRSm30opdcntZk";
-const db = supabase.createClient(SB_URL, SB_KEY);
+const SB_HEADERS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=representation" };
+
+async function sbGet(table, query="") {
+  const r = await fetch(`${SB_URL}/${table}?${query}`, { headers: SB_HEADERS });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.message || r.statusText);
+  return data;
+}
+async function sbPost(table, body) {
+  const r = await fetch(`${SB_URL}/${table}`, { method:"POST", headers: SB_HEADERS, body: JSON.stringify(body) });
+  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+}
+async function sbPatch(table, query, body) {
+  const r = await fetch(`${SB_URL}/${table}?${query}`, { method:"PATCH", headers: SB_HEADERS, body: JSON.stringify(body) });
+  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+}
+async function sbDelete(table, query) {
+  const r = await fetch(`${SB_URL}/${table}?${query}`, { method:"DELETE", headers: SB_HEADERS });
+  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+}
 
 const CLUB_NAME = "에스패밀리";
 const MEMBERS = ["김희재","권순완","신영애","김민수","김지민","김용범","직접입력"];
@@ -129,12 +147,12 @@ function dateStr(y,m,d) { return `${y}-${String(m).padStart(2,"0")}-${String(d).
 function parseDate(s) { const [y,m,d]=s.split("-").map(Number); return {y,m,d}; }
 
 async function load() {
-  const [{data:res},{data:rain}] = await Promise.all([
-    db.from("es_reservations").select("*").order("date").order("time"),
-    db.from("es_rain_days").select("*"),
+  const [res, rain] = await Promise.all([
+    sbGet("es_reservations", "order=date.asc,time.asc"),
+    sbGet("es_rain_days"),
   ]);
-  state.reservations=res||[];
-  state.rainDays=(rain||[]).map(r=>r.date);
+  state.reservations = Array.isArray(res) ? res : [];
+  state.rainDays = Array.isArray(rain) ? rain.map(r => r.date) : [];
 }
 
 function render() {
@@ -340,8 +358,8 @@ function attachEvents() {
       e.stopPropagation();
       const ds=el.dataset.rainConfirm;
       const isRain=state.rainDays.includes(ds);
-      if(isRain){state.rainDays=state.rainDays.filter(d=>d!==ds);await db.from("es_rain_days").delete().eq("date",ds);}
-      else{state.rainDays.push(ds);await db.from("es_rain_days").insert({date:ds});}
+      if(isRain){state.rainDays=state.rainDays.filter(d=>d!==ds);await sbDelete("es_rain_days",`date=eq.${ds}`);}
+      else{state.rainDays.push(ds);await sbPost("es_rain_days",{date:ds});}
       state.rainConfirm=null;render();
     });
   });
@@ -356,7 +374,7 @@ function attachEvents() {
       const id=el.dataset.pay,paid=el.dataset.paid==="true";
       state.reservations=state.reservations.map(r=>r.id===id?{...r,paid:!paid}:r);
       render();
-      await db.from("es_reservations").update({paid:!paid}).eq("id",id);
+      await sbPatch("es_reservations",`id=eq.${id}`,{paid:!paid});
     });
   });
 
@@ -373,7 +391,7 @@ function attachEvents() {
       const id=el.dataset.cancel,r=state.reservations.find(r=>r.id===id);if(!r)return;
       state.reservations=state.reservations.map(r=>r.id===id?{...r,cancelled:!r.cancelled}:r);
       state.openMenu=null;render();
-      await db.from("es_reservations").update({cancelled:!r.cancelled}).eq("id",id);
+      await sbPatch("es_reservations",`id=eq.${id}`,{cancelled:!r.cancelled});
     });
   });
 
@@ -383,7 +401,7 @@ function attachEvents() {
       const id=el.dataset.delete;
       state.reservations=state.reservations.filter(r=>r.id!==id);
       state.openMenu=null;render();
-      await db.from("es_reservations").delete().eq("id",id);
+      await sbDelete("es_reservations",`id=eq.${id}`);
     });
   });
 
@@ -407,7 +425,7 @@ function attachEvents() {
     state.showForm=false;
     state.form={time:"",venue:"",person:MEMBERS[0],customPerson:""};
     render();
-    await db.from("es_reservations").insert(item);
+    await sbPost("es_reservations",item);
   });
 }
 
