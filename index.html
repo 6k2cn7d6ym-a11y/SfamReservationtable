@@ -35,7 +35,7 @@
     .entry-person { font-size: 12px; color: #374151; width: 44px; text-align: right; flex-shrink: 0; }
     .struck { text-decoration: line-through; color: #9ca3af !important; }
     .pay-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-    .pay-dot { width: 28px; height: 28px; border-radius: 8px; border: 2px solid #d1d5db; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+    .pay-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #d1d5db; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; cursor: pointer; }
     .pay-lbl { font-size: 9px; color: #9ca3af; margin-top: 1px; }
     .more-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid #e5e7eb; background: none; color: #9ca3af; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .entry-menu { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; margin: 0 6px 4px; }
@@ -231,13 +231,13 @@ function entryRow(r, rain) {
   const cnum = vparts.length>1 ? vparts[0] : "";
   const vname = vparts.length>1 ? vparts.slice(1).join(" ") : (r.venue||"-");
   return '<div class="entry-row" style="background:'+rowBg+';border:1px solid '+rowBorder+';opacity:'+(r.cancelled?0.6:1)+'" data-menu="'+r.id+'">' +
-    '<div class="entry-venue '+cc+'" style="font-size:13px;font-weight:700">'+vname+'</div>' +
-    '<div style="font-size:11px;color:#6b7280;flex-shrink:0">'+(cnum||"")+' </div>' +
-    '<div class="entry-time" style="width:auto;flex-shrink:0">'+(r.time||"-")+'</div>' +
-    '<div class="entry-person '+cc+'">'+r.person+'</div>' +
+    '<div style="font-size:13px;font-weight:600;color:'+(r.cancelled?'#9ca3af':'#1d4ed8')+';flex-shrink:0;'+(r.cancelled?'text-decoration:line-through':'')+'">'+vname+'</div>' +
+    '<div style="font-size:13px;font-weight:600;color:'+(r.cancelled?'#9ca3af':'#374151')+';flex-shrink:0">'+(cnum?cnum:'')+' </div>' +
+    '<div style="font-size:13px;color:'+(r.cancelled?'#9ca3af':'#374151')+';flex-shrink:0">'+(r.time||"-")+'</div>' +
+    '<div style="font-size:13px;color:'+(r.cancelled?'#9ca3af':'#374151')+';flex:1;text-align:right;'+(r.cancelled?'text-decoration:line-through':'')+'">'+r.person+'</div>' +
     '<div class="pay-wrap">' +
     '<div class="pay-dot" style="background:'+dotBg+';border-color:'+dotBorder+';color:'+dotColor+'" data-pay="'+r.id+'" data-paid="'+r.paid+'" data-rain="'+rain+'">'+dotTxt+'</div>' +
-    '<div class="pay-lbl" style="color:'+dotBg+'">이체</div></div>' +
+    '</div>' +
     '<button class="more-btn" data-more="'+r.id+'">⋯</button>' +
     '</div>' + menuHTML;
 }
