@@ -227,9 +227,13 @@ function entryRow(r, rain) {
     '<button class="menu-btn" style="background:'+(r.cancelled?"#dcfce7":"#fff7ed")+';color:'+(r.cancelled?"#166534":"#c2410c")+'" data-cancel="'+r.id+'">'+(r.cancelled?"복구":"위약금취소")+'</button>' +
     '<button class="menu-btn" style="background:#fee2e2;color:#991b1b" data-del="'+r.id+'">삭제</button></div>' : "";
 
+  const vparts = (r.venue||"").split(" ");
+  const cnum = vparts.length>1 ? vparts[0] : "";
+  const vname = vparts.length>1 ? vparts.slice(1).join(" ") : (r.venue||"-");
   return '<div class="entry-row" style="background:'+rowBg+';border:1px solid '+rowBorder+';opacity:'+(r.cancelled?0.6:1)+'" data-menu="'+r.id+'">' +
-    '<div class="entry-time">'+(r.time||"-")+'</div>' +
-    '<div class="entry-venue '+cc+'">'+(r.venue||"-")+'</div>' +
+    '<div class="entry-venue '+cc+'" style="font-size:13px;font-weight:700">'+vname+'</div>' +
+    '<div style="font-size:11px;color:#6b7280;flex-shrink:0">'+(cnum||"")+' </div>' +
+    '<div class="entry-time" style="width:auto;flex-shrink:0">'+(r.time||"-")+'</div>' +
     '<div class="entry-person '+cc+'">'+r.person+'</div>' +
     '<div class="pay-wrap">' +
     '<div class="pay-dot" style="background:'+dotBg+';border-color:'+dotBorder+';color:'+dotColor+'" data-pay="'+r.id+'" data-paid="'+r.paid+'" data-rain="'+rain+'">'+dotTxt+'</div>' +
