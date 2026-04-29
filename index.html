@@ -7,434 +7,388 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f7f5; max-width: 480px; margin: 0 auto; min-height: 100vh; }
-    button { font-family: inherit; }
-
+    button { font-family: inherit; cursor: pointer; }
     .header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-    .header-center { text-align: center; }
-    .club-name { font-size: 11px; color: #9ca3af; margin-bottom: 2px; }
-    .month-title { font-size: 17px; font-weight: 700; color: #111827; }
-    .arrow-btn { background: none; border: 1px solid #e5e7eb; border-radius: 8px; width: 34px; height: 34px; font-size: 20px; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; }
-
+    .club-name { font-size: 11px; color: #9ca3af; margin-bottom: 2px; text-align: center; }
+    .month-title { font-size: 17px; font-weight: 700; color: #111827; text-align: center; }
+    .arrow-btn { background: none; border: 1px solid #e5e7eb; border-radius: 8px; width: 34px; height: 34px; font-size: 20px; color: #374151; display: flex; align-items: center; justify-content: center; }
     .calendar { background: #fff; padding: 0 12px 12px; }
-    .day-labels { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; padding-top: 10px; }
+    .day-labels { display: grid; grid-template-columns: repeat(7,1fr); padding-top: 10px; margin-bottom: 4px; }
     .day-label { text-align: center; font-size: 11px; font-weight: 600; color: #9ca3af; padding-bottom: 6px; }
-    .day-label.sun { color: #ef4444; }
-    .day-label.sat { color: #3b82f6; }
-
     .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
-    .cal-cell { min-height: 52px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; padding: 6px 2px 4px; cursor: pointer; position: relative; transition: background 0.15s; }
-    .cal-cell:hover { background: #f3f4f6; }
-    .cal-cell.empty { cursor: default; pointer-events: none; }
-    .cal-cell.today { background: #f0fdf4; }
-    .cal-cell.selected { background: #1d4ed8 !important; }
-    .cal-cell.rain-day { opacity: 0.45; }
-
-    .cal-num { font-size: 15px; font-weight: 400; color: #111827; line-height: 1; }
-    .cal-cell.today .cal-num { font-weight: 700; color: #1d4ed8; }
-    .cal-cell.selected .cal-num { font-weight: 700; color: #fff !important; }
-    .sun-num { color: #ef4444; }
-    .sat-num { color: #3b82f6; }
-
-    .dot-row { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; justify-content: center; max-width: 36px; }
+    .cal-cell { min-height: 52px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; padding: 6px 2px 4px; cursor: pointer; }
+    .cal-cell:active { background: #f3f4f6; }
+    .cal-num { font-size: 15px; line-height: 1; }
+    .dot-row { display: flex; gap: 2px; margin-top: 4px; justify-content: center; flex-wrap: wrap; max-width: 36px; }
     .dot { width: 5px; height: 5px; border-radius: 50%; }
-    .dot.unpaid { background: #f59e0b; }
-    .dot.paid { background: #1d4ed8; }
-    .dot.sel-unpaid { background: #fde68a; }
-    .dot.sel-paid { background: #bfdbfe; }
-    .rain-icon { font-size: 10px; margin-top: 3px; }
-
-    .detail-panel { background: #fff; margin: 8px 12px 0; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .detail-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 10px; border-bottom: 1px solid #f3f4f6; }
+    .detail-panel { background: #fff; margin: 8px 12px 0; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+    .detail-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 10px; border-bottom: 1px solid #f3f4f6; position: relative; }
     .detail-date { font-size: 15px; font-weight: 700; color: #111827; }
-    .detail-add-btn { background: #1d4ed8; color: #fff; border: none; border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .detail-empty { text-align: center; color: #9ca3af; font-size: 13px; padding: 24px 0; }
-
+    .detail-actions { display: flex; gap: 6px; align-items: center; }
+    .add-btn { background: #1d4ed8; color: #fff; border: none; border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; }
+    .rain-btn { background: none; border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px 8px; font-size: 12px; color: #6b7280; }
+    .empty-msg { text-align: center; color: #9ca3af; font-size: 13px; padding: 24px 0; }
     .entry-list { padding: 6px 10px 8px; }
-    .entry-row { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; }
-    .entry-row.normal { background: #fffbeb; border: 1px solid #fde68a; }
-    .entry-row.paid { background: #eff6ff; border: 1px solid #bfdbfe; }
-    .entry-row.cancelled { background: #f9fafb; border: 1px solid #e5e7eb; opacity: 0.6; }
-    .entry-row.rain-entry { background: #f3f4f6; border: 1px solid #e5e7eb; }
-
-    .entry-time { font-size: 11px; color: #9ca3af; width: 36px; flex-shrink: 0; }
-    .entry-venue { font-size: 11px; font-weight: 600; color: #1d4ed8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .entry-venue.cancelled-c { color: #9ca3af; text-decoration: line-through; }
-    .entry-person { font-size: 12px; color: #374151; width: 44px; flex-shrink: 0; text-align: right; }
-    .entry-person.cancelled-c { color: #9ca3af; text-decoration: line-through; }
-
-    .pay-btn { width: 28px; height: 28px; border-radius: 8px; border: 2px solid #d1d5db; background: #f3f4f6; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
-    .pay-btn.paid-blue { background: #1d4ed8; border-color: #1d4ed8; }
-    .pay-btn.paid-orange { background: #f97316; border-color: #f97316; }
-    .pay-btn span { color: #fff; font-size: 13px; font-weight: 900; }
-    .pay-label { font-size: 9px; color: #9ca3af; text-align: center; margin-top: 1px; }
-    .pay-label.paid-blue { color: #1d4ed8; }
-    .pay-label.paid-orange { color: #f97316; }
-    .pay-wrap { display: flex; flex-direction: column; align-items: center; }
-
-    .more-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid #e5e7eb; background: none; color: #9ca3af; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .entry-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 8px; margin-bottom: 4px; }
+    .entry-time { font-size: 11px; color: #9ca3af; width: 40px; flex-shrink: 0; }
+    .entry-venue { font-size: 12px; font-weight: 600; color: #1d4ed8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .entry-person { font-size: 12px; color: #374151; width: 44px; text-align: right; flex-shrink: 0; }
+    .struck { text-decoration: line-through; color: #9ca3af !important; }
+    .pay-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .pay-dot { width: 28px; height: 28px; border-radius: 8px; border: 2px solid #d1d5db; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+    .pay-lbl { font-size: 9px; color: #9ca3af; margin-top: 1px; }
+    .more-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid #e5e7eb; background: none; color: #9ca3af; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .entry-menu { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; margin: 0 6px 4px; }
-    .menu-btn { display: block; width: 100%; padding: 10px 14px; border: none; border-bottom: 1px solid #f3f4f6; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; font-family: inherit; }
+    .menu-btn { display: block; width: 100%; padding: 10px 14px; border: none; border-bottom: 1px solid #f3f4f6; font-size: 13px; font-weight: 600; text-align: left; }
     .menu-btn:last-child { border-bottom: none; }
-
     .add-form { padding: 12px 12px 16px; border-top: 1px solid #f3f4f6; }
     .form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .form-label { font-size: 12px; color: #6b7280; width: 36px; flex-shrink: 0; }
+    .form-lbl { font-size: 12px; color: #6b7280; width: 40px; flex-shrink: 0; }
     .chip-group { display: flex; gap: 5px; flex-wrap: wrap; }
-    .chip { padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: #f3f4f6; color: #374151; font-family: inherit; }
-    .chip.active { background: #1d4ed8; color: #fff; }
-    .form-input { padding: 7px 10px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 13px; outline: none; font-family: inherit; width: 100%; }
-    .member-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .chip { padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; background: #f3f4f6; color: #374151; }
+    .chip.on { background: #1d4ed8; color: #fff; }
+    .finput { padding: 7px 10px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 13px; outline: none; font-family: inherit; }
     .form-actions { display: flex; gap: 8px; margin-top: 12px; }
-    .btn-submit { flex: 1; padding: 10px 0; background: #1d4ed8; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .btn-close { padding: 10px 14px; background: #f3f4f6; color: #374151; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; }
-
-    .center-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 12px; }
-    .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top: 3px solid #1d4ed8; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Rain popup */
-    .rain-popup { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); z-index: 30; background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 10px 10px 8px; min-width: 90px; text-align: center; }
+    .btn-ok { flex: 1; padding: 10px 0; background: #1d4ed8; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; }
+    .btn-cl { padding: 10px 14px; background: #f3f4f6; color: #374151; border: none; border-radius: 10px; font-size: 14px; }
+    .rain-popup { position: absolute; right: 12px; top: 44px; z-index: 30; background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 10px; min-width: 100px; text-align: center; }
     .rain-popup-title { font-size: 11px; color: #374151; margin-bottom: 8px; font-weight: 600; }
     .rain-popup-btns { display: flex; gap: 4px; }
-    .rain-confirm-btn { flex: 1; padding: 5px 0; border-radius: 7px; border: none; background: #6b7280; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
-    .rain-confirm-btn.restore { background: #1d4ed8; }
-    .rain-cancel-btn { flex: 1; padding: 5px 0; border-radius: 7px; border: 1px solid #e5e7eb; background: #f9fafb; color: #6b7280; font-size: 11px; cursor: pointer; font-family: inherit; }
+    .rp-ok { flex: 1; padding: 5px 0; border-radius: 7px; border: none; background: #6b7280; color: #fff; font-size: 11px; font-weight: 700; }
+    .rp-ok.restore { background: #1d4ed8; }
+    .rp-no { flex: 1; padding: 5px 0; border-radius: 7px; border: 1px solid #e5e7eb; background: #f9fafb; color: #6b7280; font-size: 11px; }
+    .center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 12px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top: 3px solid #1d4ed8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-<div id="app">
-  <div class="center-screen"><div class="spinner"></div><div style="color:#9ca3af;font-size:13px">로딩중...</div></div>
-</div>
-
+<div id="app"><div class="center"><div class="spinner"></div><p style="color:#9ca3af;font-size:13px">로딩중...</p></div></div>
 <script>
-const SB_URL = "https://yuvwtyljcipcgotzonkc.supabase.co/rest/v1";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1dnd0eWxqY2lwY2dvdHpvbmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTk3NjUsImV4cCI6MjA5Mjk3NTc2NX0.DQkCV-LouCF7nb52n1dTlqD_PWRMPVRSm30opdcntZk";
-const SB_HEADERS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=representation" };
+// ── Supabase REST (no SDK) ──────────────────────────────
+const BASE = "https://yuvwtyljcipcgotzonkc.supabase.co/rest/v1";
+const KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1dnd0eWxqY2lwY2dvdHpvbmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczOTk3NjUsImV4cCI6MjA5Mjk3NTc2NX0.DQkCV-LouCF7nb52n1dTlqD_PWRMPVRSm30opdcntZk";
+const H    = { "apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json", "Prefer": "return=representation" };
 
-async function sbGet(table, query="") {
-  const r = await fetch(`${SB_URL}/${table}?${query}`, { headers: SB_HEADERS });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.message || r.statusText);
-  return data;
+async function GET(table, qs) {
+  const res = await fetch(BASE + "/" + table + (qs ? "?" + qs : ""), { headers: H });
+  const js  = await res.json();
+  if (!res.ok) throw new Error((js && js.message) || res.statusText);
+  return js;
 }
-async function sbPost(table, body) {
-  const r = await fetch(`${SB_URL}/${table}`, { method:"POST", headers: SB_HEADERS, body: JSON.stringify(body) });
-  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+async function POST(table, body) {
+  const res = await fetch(BASE + "/" + table, { method: "POST", headers: H, body: JSON.stringify(body) });
+  if (!res.ok) { const js = await res.json(); throw new Error((js && js.message) || res.statusText); }
 }
-async function sbPatch(table, query, body) {
-  const r = await fetch(`${SB_URL}/${table}?${query}`, { method:"PATCH", headers: SB_HEADERS, body: JSON.stringify(body) });
-  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+async function PATCH(table, col, val, body) {
+  const res = await fetch(BASE + "/" + table + "?" + col + "=eq." + val, { method: "PATCH", headers: H, body: JSON.stringify(body) });
+  if (!res.ok) { const js = await res.json(); throw new Error((js && js.message) || res.statusText); }
 }
-async function sbDelete(table, query) {
-  const r = await fetch(`${SB_URL}/${table}?${query}`, { method:"DELETE", headers: SB_HEADERS });
-  if (!r.ok) { const d = await r.json(); throw new Error(d.message || r.statusText); }
+async function DEL(table, col, val) {
+  const res = await fetch(BASE + "/" + table + "?" + col + "=eq." + val, { method: "DELETE", headers: H });
+  if (!res.ok) { const js = await res.json(); throw new Error((js && js.message) || res.statusText); }
 }
 
-const CLUB_NAME = "에스패밀리";
+// ── Config ─────────────────────────────────────────────
+const CLUB    = "에스패밀리";
 const MEMBERS = ["김희재","권순완","신영애","김민수","김지민","김용범","직접입력"];
-const DAYS = ["일","월","화","수","목","금","토"];
+const DAYS    = ["일","월","화","수","목","금","토"];
 
-let state = {
-  year:0, month:0,
-  reservations:[], rainDays:[],
-  selected:null, openMenu:null, showForm:false,
-  rainConfirm:null,
-  form:{ time:"", venue:"", person:MEMBERS[0], customPerson:"" },
+// ── State ──────────────────────────────────────────────
+const S = {
+  year: 0, month: 0,
+  res: [], rain: [],
+  sel: null,
+  menu: null,
+  form: false,
+  rainPop: false,
+  f: { time: "", venue: "", person: MEMBERS[0], cp: "" }
 };
 
-function toKST() { return new Date(Date.now()+9*60*60*1000).toISOString().split("T")[0]; }
-function dateStr(y,m,d) { return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
-function parseDate(s) { const [y,m,d]=s.split("-").map(Number); return {y,m,d}; }
+// ── Helpers ────────────────────────────────────────────
+function kst()        { return new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10); }
+function ds(y,m,d)    { return y+"-"+pad(m)+"-"+pad(d); }
+function pad(n)       { return String(n).padStart(2,"0"); }
+function pd(s)        { const p=s.split("-"); return {y:+p[0],m:+p[1],d:+p[2]}; }
+function dow(s)       { return new Date(s+"T00:00:00").getDay(); }
+function firstDow(y,m){ return new Date(y,m-1,1).getDay(); }
+function daysIn(y,m)  { return new Date(y,m,0).getDate(); }
 
+// ── Load ───────────────────────────────────────────────
 async function load() {
-  const [res, rain] = await Promise.all([
-    sbGet("es_reservations", "order=date.asc,time.asc"),
-    sbGet("es_rain_days"),
-  ]);
-  state.reservations = Array.isArray(res) ? res : [];
-  state.rainDays = Array.isArray(rain) ? rain.map(r => r.date) : [];
+  const a = await GET("es_reservations","order=date.asc,time.asc");
+  const b = await GET("es_rain_days");
+  S.res  = Array.isArray(a) ? a : [];
+  S.rain = Array.isArray(b) ? b.map(r=>r.date) : [];
 }
 
+// ── Render ─────────────────────────────────────────────
 function render() {
-  document.getElementById("app").innerHTML = buildPage();
-  attachEvents();
+  document.getElementById("app").innerHTML = page();
+  bind();
 }
 
-function buildPage() {
-  const today=toKST();
-  const {y,m}=state;
-  const firstDow=new Date(y,m-1,1).getDay();
-  const daysInMonth=new Date(y,m,0).getDate();
+function page() {
+  const today = kst();
+  const fd    = firstDow(S.year, S.month);
+  const days  = daysIn(S.year, S.month);
 
-  let cells=Array(firstDow).fill(null);
-  for(let d=1;d<=daysInMonth;d++) cells.push(d);
+  // blank cells + day cells
+  let cells = "";
+  for (let i = 0; i < fd; i++) cells += "<div></div>";
+  for (let d = 1; d <= days; d++) {
+    const date   = ds(S.year, S.month, d);
+    const dw     = (fd + d - 1) % 7;
+    const isTod  = date === today;
+    const isSel  = date === S.sel;
+    const isRain = S.rain.indexOf(date) >= 0;
+    const dayRes = S.res.filter(r => r.date === date && !r.cancelled);
 
-  const calRows=cells.map((d,i)=>{
-    if(!d) return `<div class="cal-cell empty"></div>`;
-    const ds=dateStr(y,m,d);
-    const dow=(firstDow+d-1)%7;
-    const isToday=ds===today;
-    const isSel=ds===state.selected;
-    const rain=state.rainDays.includes(ds);
-    const res=state.reservations.filter(r=>r.date===ds);
-    const active=res.filter(r=>!r.cancelled);
+    let bg = "";
+    if (isSel)  bg = "background:#1d4ed8;border-radius:10px";
+    else if (isTod) bg = "background:#eff6ff;border-radius:10px";
 
-    let cls="cal-cell";
-    if(isToday) cls+=" today";
-    if(isSel) cls+=" selected";
-    if(rain) cls+=" rain-day";
+    let nc = isSel ? "#fff" : (dw===0?"#ef4444":dw===6?"#3b82f6":"#111827");
+    if (isTod && !isSel) nc = "#1d4ed8";
 
-    const dots=active.slice(0,4).map(r=>{
-      const dc=isSel?(r.paid?"sel-paid":"sel-unpaid"):(r.paid?"paid":"unpaid");
-      return `<div class="dot ${dc}"></div>`;
-    }).join("")+(rain?`<div class="rain-icon">☔</div>`:"");
+    const dots = dayRes.slice(0,4).map(r => {
+      const c = isSel ? (r.paid?"#bfdbfe":"#fde68a") : (r.paid?"#1d4ed8":"#f59e0b");
+      return '<div class="dot" style="background:' + c + '"></div>';
+    }).join("") + (isRain ? '<div style="font-size:10px;margin-top:2px">☔</div>' : "");
 
-    const numCls=!isSel?(dow===0?"sun-num":dow===6?"sat-num":""):"";
-    return `
-      <div class="${cls}" data-select="${ds}">
-        <div class="cal-num ${numCls}">${d}</div>
-        <div class="dot-row">${dots}</div>
-      </div>`;
-  }).join("");
-
-  const detailHTML=state.selected?buildDetail():"";
-
-  return `
-    <div class="header">
-      <button class="arrow-btn" id="prev-month">‹</button>
-      <div class="header-center">
-        <div class="club-name">${CLUB_NAME}</div>
-        <div class="month-title">${y}년 ${m}월</div>
-      </div>
-      <button class="arrow-btn" id="next-month">›</button>
-    </div>
-    <div class="calendar">
-      <div class="day-labels">
-        ${DAYS.map((d,i)=>`<div class="day-label ${i===0?"sun":i===6?"sat":""}">${d}</div>`).join("")}
-      </div>
-      <div class="cal-grid">${calRows}</div>
-    </div>
-    ${detailHTML}
-    <div style="height:40px"></div>`;
-}
-
-function buildDetail() {
-  const ds=state.selected;
-  const {m,d}=parseDate(ds);
-  const dow=new Date(ds+"T00:00:00").getDay();
-  const rain=state.rainDays.includes(ds);
-  const res=state.reservations.filter(r=>r.date===ds);
-  const active=res.filter(r=>!r.cancelled);
-  const cancelled=res.filter(r=>r.cancelled);
-  const dateLabel=`${m}/${d}(${DAYS[dow]})${rain?" ☔":""}`;
-
-  let entriesHTML="";
-  if(res.length===0&&!state.showForm) {
-    entriesHTML=`<div class="detail-empty">예약 없음</div>`;
-  } else {
-    entriesHTML=`<div class="entry-list">${[...active,...cancelled].map(r=>entryRowHTML(r,rain)).join("")}</div>`;
+    cells += '<div class="cal-cell" style="' + bg + ';opacity:' + (isRain&&!isSel?0.45:1) + '" data-d="' + date + '">' +
+      '<div class="cal-num" style="color:' + nc + '">' + d + '</div>' +
+      '<div class="dot-row">' + dots + '</div></div>';
   }
 
-  // Rain popup on detail header
-  const rainPopup=state.rainConfirm===ds?`
-    <div class="rain-popup">
-      <div class="rain-popup-title">${rain?"☀️ 우천해제?":"☔ 우천취소?"}</div>
-      <div class="rain-popup-btns">
-        <button class="${rain?"rain-confirm-btn restore":"rain-confirm-btn"}" data-rain-confirm="${ds}">확인</button>
-        <button class="rain-cancel-btn" data-rain-cancel>취소</button>
-      </div>
-    </div>`:"";
+  const detHTML = S.sel ? detail() : "";
 
-  return `
-    <div class="detail-panel">
-      <div class="detail-header" style="position:relative">
-        <div class="detail-date">${dateLabel}</div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button style="background:none;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;font-size:12px;color:#6b7280;cursor:pointer" data-rain-toggle="${ds}">☔</button>
-          ${!rain?`<button class="detail-add-btn" id="toggle-form">${state.showForm?"✕ 닫기":"+ 추가"}</button>`:""}
-        </div>
-        ${rainPopup}
-      </div>
-      ${entriesHTML}
-      ${state.showForm?buildAddForm():""}
-    </div>`;
+  return '<div class="header">' +
+    '<button class="arrow-btn" id="pm">‹</button>' +
+    '<div><div class="club-name">' + CLUB + '</div><div class="month-title">' + S.year + '년 ' + S.month + '월</div></div>' +
+    '<button class="arrow-btn" id="nm">›</button></div>' +
+    '<div class="calendar">' +
+    '<div class="day-labels">' + DAYS.map((d,i)=>'<div class="day-label" style="color:'+(i===0?"#ef4444":i===6?"#3b82f6":"#9ca3af")+'">' + d + '</div>').join("") + '</div>' +
+    '<div class="cal-grid">' + cells + '</div></div>' +
+    detHTML +
+    '<div style="height:40px"></div>';
 }
 
-function entryRowHTML(r,rain) {
-  let rowCls="entry-row ";
-  if(rain) rowCls+="rain-entry";
-  else if(r.cancelled) rowCls+="cancelled";
-  else if(r.paid) rowCls+="paid";
-  else rowCls+="normal";
-  const cc=r.cancelled?"cancelled-c":"";
+function detail() {
+  const date   = S.sel;
+  const {m,d}  = pd(date);
+  const dw     = dow(date);
+  const isRain = S.rain.indexOf(date) >= 0;
+  const active = S.res.filter(r=>r.date===date&&!r.cancelled);
+  const cancld = S.res.filter(r=>r.date===date&&r.cancelled);
+  const label  = m+"/"+d+"("+DAYS[dw]+")"+(isRain?" ☔":"");
 
-  let payBtnCls="pay-btn", payLabelCls="pay-label";
-  if(r.paid&&!rain) {
-    if(r.cancelled){payBtnCls+=" paid-orange";payLabelCls+=" paid-orange";}
-    else{payBtnCls+=" paid-blue";payLabelCls+=" paid-blue";}
+  let rows = "";
+  [...active,...cancld].forEach(r => { rows += entryRow(r, isRain); });
+  if (!rows && !S.form) rows = '<div class="empty-msg">예약 없음</div>';
+
+  const rainPopHTML = S.rainPop ?
+    '<div class="rain-popup"><div class="rain-popup-title">'+(isRain?"☀️ 우천해제?":"☔ 우천취소?")+'</div>' +
+    '<div class="rain-popup-btns">' +
+    '<button class="rp-ok'+(isRain?" restore":"")+ '" id="rp-ok">확인</button>' +
+    '<button class="rp-no" id="rp-no">취소</button></div></div>' : "";
+
+  return '<div class="detail-panel">' +
+    '<div class="detail-header">' +
+    '<div class="detail-date">'+label+'</div>' +
+    '<div class="detail-actions">' +
+    '<button class="rain-btn" id="rain-toggle">☔</button>' +
+    (!isRain?'<button class="add-btn" id="toggle-form">'+(S.form?"✕ 닫기":"+ 추가")+'</button>':"") +
+    '</div>' + rainPopHTML + '</div>' +
+    (rows ? '<div class="entry-list">'+rows+'</div>' : "") +
+    (S.form ? addForm() : "") +
+    '</div>';
+}
+
+function entryRow(r, rain) {
+  const cc = r.cancelled ? "struck" : "";
+  let rowBg, rowBorder;
+  if (rain)         { rowBg="#f3f4f6"; rowBorder="#e5e7eb"; }
+  else if (r.cancelled) { rowBg="#f9fafb"; rowBorder="#e5e7eb"; }
+  else if (r.paid)  { rowBg="#eff6ff"; rowBorder="#bfdbfe"; }
+  else              { rowBg="#fffbeb"; rowBorder="#fde68a"; }
+
+  let dotBg="#f3f4f6", dotBorder="#d1d5db", dotColor="", dotTxt="";
+  if (r.paid && !rain) {
+    dotBg     = r.cancelled ? "#f97316" : "#1d4ed8";
+    dotBorder = dotBg;
+    dotColor  = "#fff";
+    dotTxt    = "✓";
   }
 
-  const menuHTML=state.openMenu===r.id?`
-    <div class="entry-menu">
-      <button class="menu-btn" style="background:${r.cancelled?"#dcfce7":"#fff7ed"};color:${r.cancelled?"#166534":"#c2410c"}" data-cancel="${r.id}">${r.cancelled?"복구":"위약금취소"}</button>
-      <button class="menu-btn" style="background:#fee2e2;color:#991b1b" data-delete="${r.id}">삭제</button>
-    </div>`:"";
+  const menuHTML = S.menu === r.id ?
+    '<div class="entry-menu">' +
+    '<button class="menu-btn" style="background:'+(r.cancelled?"#dcfce7":"#fff7ed")+';color:'+(r.cancelled?"#166534":"#c2410c")+'" data-cancel="'+r.id+'">'+(r.cancelled?"복구":"위약금취소")+'</button>' +
+    '<button class="menu-btn" style="background:#fee2e2;color:#991b1b" data-del="'+r.id+'">삭제</button></div>' : "";
 
-  return `
-    <div class="${rowCls}" data-toggle-menu="${r.id}">
-      <div class="entry-time">${r.time||"-"}</div>
-      <div class="entry-venue ${cc}">${r.venue||"-"}</div>
-      <div class="entry-person ${cc}">${r.person}</div>
-      <div class="pay-wrap">
-        <div class="${payBtnCls}" data-pay="${r.id}" data-paid="${r.paid}" data-rain="${rain}" onclick="event.stopPropagation()">
-          ${r.paid&&!rain?"<span>✓</span>":""}
-        </div>
-        <div class="${payLabelCls}">이체</div>
-      </div>
-      <button class="more-btn" data-more="${r.id}" onclick="event.stopPropagation()">⋯</button>
-    </div>
-    ${menuHTML}`;
+  return '<div class="entry-row" style="background:'+rowBg+';border:1px solid '+rowBorder+';opacity:'+(r.cancelled?0.6:1)+'" data-menu="'+r.id+'">' +
+    '<div class="entry-time">'+(r.time||"-")+'</div>' +
+    '<div class="entry-venue '+cc+'">'+(r.venue||"-")+'</div>' +
+    '<div class="entry-person '+cc+'">'+r.person+'</div>' +
+    '<div class="pay-wrap">' +
+    '<div class="pay-dot" style="background:'+dotBg+';border-color:'+dotBorder+';color:'+dotColor+'" data-pay="'+r.id+'" data-paid="'+r.paid+'" data-rain="'+rain+'">'+dotTxt+'</div>' +
+    '<div class="pay-lbl" style="color:'+dotBg+'">이체</div></div>' +
+    '<button class="more-btn" data-more="'+r.id+'">⋯</button>' +
+    '</div>' + menuHTML;
 }
 
-function buildAddForm() {
-  const f=state.form;
-  const memberChips=MEMBERS.map(m=>`<button class="chip${f.person===m?" active":""}" data-person="${m}">${m}</button>`).join("");
-  const cpHTML=f.person==="직접입력"?`<input class="form-input" id="customPerson" placeholder="이름" value="${f.customPerson}" style="margin-top:6px">`:"";
+function addForm() {
+  const f = S.f;
+  const mchips = MEMBERS.map(m =>
+    '<button class="chip'+(f.person===m?" on":"")+ '" data-p="'+m+'">'+m+'</button>'
+  ).join("");
+  const cpInput = f.person==="직접입력" ?
+    '<input class="finput" id="cp" placeholder="이름" value="'+f.cp+'" style="width:100%;margin-top:6px">' : "";
 
-  return `
-    <div class="add-form">
-      <div class="form-row">
-        <span class="form-label">시간</span>
-        <input class="form-input" id="timeInput" placeholder="예: 7-8시, 오전 10시" value="${f.time}" style="width:auto;flex:1">
-      </div>
-      <div class="form-row">
-        <span class="form-label">테니스장</span>
-        <input class="form-input" id="venueInput" placeholder="예: 올림픽공원" value="${f.venue}" style="flex:1">
-      </div>
-      <div style="margin-bottom:10px">
-        <div class="member-label">예약자</div>
-        <div class="chip-group">${memberChips}</div>
-        ${cpHTML}
-      </div>
-      <div class="form-actions">
-        <button class="btn-submit" id="submit-add">추가</button>
-        <button class="btn-close" id="close-form">닫기</button>
-      </div>
-    </div>`;
+  return '<div class="add-form">' +
+    '<div class="form-row"><span class="form-lbl">시간</span>' +
+    '<input class="finput" id="fi-time" placeholder="예: 7-8시, 오전10시" value="'+f.time+'" style="flex:1"></div>' +
+    '<div class="form-row"><span class="form-lbl">테니스장</span>' +
+    '<input class="finput" id="fi-venue" placeholder="장소 이름" value="'+f.venue+'" style="flex:1"></div>' +
+    '<div style="margin-bottom:10px"><div style="font-size:12px;color:#6b7280;margin-bottom:6px">예약자</div>' +
+    '<div class="chip-group">'+mchips+'</div>'+cpInput+'</div>' +
+    '<div class="form-actions">' +
+    '<button class="btn-ok" id="submit">추가</button>' +
+    '<button class="btn-cl" id="close-form">닫기</button></div></div>';
 }
 
-function attachEvents() {
-  document.getElementById("prev-month")?.addEventListener("click",()=>{
-    state.month--;if(state.month<1){state.month=12;state.year--;}state.selected=null;render();
-  });
-  document.getElementById("next-month")?.addEventListener("click",()=>{
-    state.month++;if(state.month>12){state.month=1;state.year++;}state.selected=null;render();
+// ── Event binding ──────────────────────────────────────
+function bind() {
+  // Month nav
+  const pm = document.getElementById("pm");
+  const nm = document.getElementById("nm");
+  if (pm) pm.onclick = () => { S.month--; if(S.month<1){S.month=12;S.year--;} S.sel=null; render(); };
+  if (nm) nm.onclick = () => { S.month++; if(S.month>12){S.month=1;S.year++;} S.sel=null; render(); };
+
+  // Calendar cells
+  document.querySelectorAll("[data-d]").forEach(el => {
+    el.onclick = () => {
+      S.sel = S.sel===el.dataset.d ? null : el.dataset.d;
+      S.form=false; S.menu=null; S.rainPop=false; render();
+    };
   });
 
-  document.querySelectorAll("[data-select]").forEach(el=>{
-    el.addEventListener("click",()=>{
-      const ds=el.dataset.select;
-      state.selected=state.selected===ds?null:ds;
-      state.showForm=false;state.openMenu=null;state.rainConfirm=null;render();
-    });
-  });
+  // Rain popup
+  const rt = document.getElementById("rain-toggle");
+  if (rt) rt.onclick = e => { e.stopPropagation(); S.rainPop=!S.rainPop; render(); };
+  const rpOk = document.getElementById("rp-ok");
+  if (rpOk) rpOk.onclick = async e => {
+    e.stopPropagation();
+    const isRain = S.rain.indexOf(S.sel) >= 0;
+    if (isRain) { S.rain=S.rain.filter(d=>d!==S.sel); await DEL("es_rain_days","date",S.sel); }
+    else        { S.rain.push(S.sel); await POST("es_rain_days",{date:S.sel}); }
+    S.rainPop=false; render();
+  };
+  const rpNo = document.getElementById("rp-no");
+  if (rpNo) rpNo.onclick = e => { e.stopPropagation(); S.rainPop=false; render(); };
 
-  document.getElementById("toggle-form")?.addEventListener("click",()=>{
-    state.showForm=!state.showForm;
-    state.form={time:"",venue:"",person:MEMBERS[0],customPerson:""};render();
-  });
-  document.getElementById("close-form")?.addEventListener("click",()=>{state.showForm=false;render();});
+  // Add form toggle
+  const tf = document.getElementById("toggle-form");
+  if (tf) tf.onclick = () => { S.form=!S.form; S.f={time:"",venue:"",person:MEMBERS[0],cp:""}; render(); };
+  const cf = document.getElementById("close-form");
+  if (cf) cf.onclick = () => { S.form=false; render(); };
 
-  // Rain toggle button on detail
-  document.querySelectorAll("[data-rain-toggle]").forEach(el=>{
-    el.addEventListener("click",e=>{
+  // Pay
+  document.querySelectorAll("[data-pay]").forEach(el => {
+    el.onclick = async e => {
       e.stopPropagation();
-      state.rainConfirm=state.rainConfirm===el.dataset.rainToggle?null:el.dataset.rainToggle;
+      if (el.dataset.rain==="true") return;
+      const id=el.dataset.pay, paid=el.dataset.paid==="true";
+      S.res = S.res.map(r=>r.id===id?{...r,paid:!paid}:r);
       render();
-    });
+      await PATCH("es_reservations","id",id,{paid:!paid});
+    };
   });
-  document.querySelectorAll("[data-rain-confirm]").forEach(el=>{
-    el.addEventListener("click",async e=>{
+
+  // More menu
+  document.querySelectorAll("[data-more]").forEach(el => {
+    el.onclick = e => { e.stopPropagation(); S.menu=S.menu===el.dataset.more?null:el.dataset.more; render(); };
+  });
+  document.querySelectorAll("[data-menu]").forEach(el => {
+    el.onclick = () => { if(S.menu){S.menu=null;render();} };
+  });
+
+  // Cancel / Delete
+  document.querySelectorAll("[data-cancel]").forEach(el => {
+    el.onclick = async e => {
       e.stopPropagation();
-      const ds=el.dataset.rainConfirm;
-      const isRain=state.rainDays.includes(ds);
-      if(isRain){state.rainDays=state.rainDays.filter(d=>d!==ds);await sbDelete("es_rain_days",`date=eq.${ds}`);}
-      else{state.rainDays.push(ds);await sbPost("es_rain_days",{date:ds});}
-      state.rainConfirm=null;render();
-    });
+      const id=el.dataset.cancel, r=S.res.find(r=>r.id===id); if(!r)return;
+      S.res=S.res.map(r=>r.id===id?{...r,cancelled:!r.cancelled}:r);
+      S.menu=null; render();
+      await PATCH("es_reservations","id",id,{cancelled:!r.cancelled});
+    };
   });
-  document.querySelectorAll("[data-rain-cancel]").forEach(el=>{
-    el.addEventListener("click",e=>{e.stopPropagation();state.rainConfirm=null;render();});
-  });
-
-  document.querySelectorAll("[data-pay]").forEach(el=>{
-    el.addEventListener("click",async e=>{
+  document.querySelectorAll("[data-del]").forEach(el => {
+    el.onclick = async e => {
       e.stopPropagation();
-      if(el.dataset.rain==="true") return;
-      const id=el.dataset.pay,paid=el.dataset.paid==="true";
-      state.reservations=state.reservations.map(r=>r.id===id?{...r,paid:!paid}:r);
-      render();
-      await sbPatch("es_reservations",`id=eq.${id}`,{paid:!paid});
-    });
+      const id=el.dataset.del;
+      S.res=S.res.filter(r=>r.id!==id);
+      S.menu=null; render();
+      await DEL("es_reservations","id",id);
+    };
   });
 
-  document.querySelectorAll("[data-more]").forEach(el=>{
-    el.addEventListener("click",e=>{e.stopPropagation();const id=el.dataset.more;state.openMenu=state.openMenu===id?null:id;render();});
-  });
-  document.querySelectorAll("[data-toggle-menu]").forEach(el=>{
-    el.addEventListener("click",()=>{if(state.openMenu){state.openMenu=null;render();}});
+  // Form person chips
+  document.querySelectorAll("[data-p]").forEach(el => {
+    el.onclick = () => { S.f.person=el.dataset.p; render(); };
   });
 
-  document.querySelectorAll("[data-cancel]").forEach(el=>{
-    el.addEventListener("click",async e=>{
-      e.stopPropagation();
-      const id=el.dataset.cancel,r=state.reservations.find(r=>r.id===id);if(!r)return;
-      state.reservations=state.reservations.map(r=>r.id===id?{...r,cancelled:!r.cancelled}:r);
-      state.openMenu=null;render();
-      await sbPatch("es_reservations",`id=eq.${id}`,{cancelled:!r.cancelled});
-    });
+  // Input sync (keep values while re-rendering)
+  ["fi-time","fi-venue","cp"].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.oninput = e => {
+      if(id==="fi-time")  S.f.time  = e.target.value;
+      if(id==="fi-venue") S.f.venue = e.target.value;
+      if(id==="cp")       S.f.cp    = e.target.value;
+    };
   });
 
-  document.querySelectorAll("[data-delete]").forEach(el=>{
-    el.addEventListener("click",async e=>{
-      e.stopPropagation();
-      const id=el.dataset.delete;
-      state.reservations=state.reservations.filter(r=>r.id!==id);
-      state.openMenu=null;render();
-      await sbDelete("es_reservations",`id=eq.${id}`);
-    });
-  });
+  // Submit
+  const sub = document.getElementById("submit");
+  if (sub) sub.onclick = async () => {
+    // sync inputs before reading
+    const te=document.getElementById("fi-time");
+    const ve=document.getElementById("fi-venue");
+    const ce=document.getElementById("cp");
+    if(te) S.f.time  = te.value;
+    if(ve) S.f.venue = ve.value;
+    if(ce) S.f.cp    = ce.value;
 
-  document.querySelectorAll("[data-person]").forEach(el=>{el.addEventListener("click",()=>{state.form.person=el.dataset.person;render();});});
-  document.getElementById("timeInput")?.addEventListener("input",e=>{state.form.time=e.target.value;});
-  document.getElementById("venueInput")?.addEventListener("input",e=>{state.form.venue=e.target.value;});
-  document.getElementById("customPerson")?.addEventListener("input",e=>{state.form.customPerson=e.target.value;});
+    const person = S.f.person==="직접입력" ? S.f.cp.trim() : S.f.person;
+    if (!S.f.time.trim() || !S.f.venue.trim() || !person) return;
 
-  document.getElementById("submit-add")?.addEventListener("click",async()=>{
-    const f=state.form;
-    const tEl=document.getElementById("timeInput");
-    const vEl=document.getElementById("venueInput");
-    const cpEl=document.getElementById("customPerson");
-    if(tEl) f.time=tEl.value;
-    if(vEl) f.venue=vEl.value;
-    if(cpEl) f.customPerson=cpEl.value;
-    const person=f.person==="직접입력"?f.customPerson.trim():f.person;
-    if(!f.time.trim()||!f.venue.trim()||!person) return;
-    const item={id:Date.now().toString(),date:state.selected,time:f.time.trim(),venue:f.venue.trim(),person,paid:false,cancelled:false};
-    state.reservations.push(item);
-    state.showForm=false;
-    state.form={time:"",venue:"",person:MEMBERS[0],customPerson:""};
+    const item = { id: String(Date.now()), date: S.sel, time: S.f.time.trim(), venue: S.f.venue.trim(), person, paid: false, cancelled: false };
+    S.res.push(item);
+    S.form=false;
+    S.f={time:"",venue:"",person:MEMBERS[0],cp:""};
     render();
-    await sbPost("es_reservations",item);
-  });
+    await POST("es_reservations", item);
+  };
 }
 
-const todayStr=toKST();
-const [ty,tm]=todayStr.split("-").map(Number);
-state.year=ty;state.month=tm;state.selected=todayStr;
-load().then(()=>render()).catch(e=>{
-  document.getElementById("app").innerHTML=`<div class="center-screen"><div style="color:#ef4444;text-align:center">⚠️ 연결 실패<br><small>${e.message}</small></div><button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;cursor:pointer">다시 시도</button></div>`;
-});
+// ── Init ───────────────────────────────────────────────
+(async () => {
+  const today = kst();
+  const p = today.split("-");
+  S.year  = parseInt(p[0]);
+  S.month = parseInt(p[1]);
+  S.sel   = today;
+  try {
+    await load();
+    render();
+  } catch(e) {
+    document.getElementById("app").innerHTML =
+      '<div class="center">' +
+      '<div style="color:#ef4444;text-align:center;font-size:14px">⚠️ 연결 실패<br><small>'+e.message+'</small></div>' +
+      '<button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #e5e7eb;background:#fff">다시 시도</button>' +
+      '</div>';
+  }
+})();
 </script>
 </body>
 </html>
