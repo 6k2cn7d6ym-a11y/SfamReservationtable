@@ -92,6 +92,7 @@ async function DEL(table, col, val) {
 // ── Config ─────────────────────────────────────────────
 const CLUB    = "에스패밀리";
 const MEMBERS = ["김희재","권순완","신영애","김민수","김지민","김용범","직접입력"];
+const VENUES  = ["강일","명일","직접입력"];
 const DAYS    = ["일","월","화","수","목","금","토"];
 
 // ── State ──────────────────────────────────────────────
@@ -102,7 +103,7 @@ const S = {
   menu: null,
   form: false,
   rainPop: false,
-  f: { time: "", venue: "", person: MEMBERS[0], cp: "" }
+  f: { time: "", venue: VENUES[0], court: "", person: MEMBERS[0], cp: "", cv: "" }
 };
 
 // ── Helpers ────────────────────────────────────────────
@@ -245,11 +246,20 @@ function addForm() {
   const cpInput = f.person==="직접입력" ?
     '<input class="finput" id="cp" placeholder="이름" value="'+f.cp+'" style="width:100%;margin-top:6px">' : "";
 
+  const vchips = VENUES.map(v =>
+    '<button class="chip'+(f.venue===v?" on":"")+ '" data-v="'+v+'">'+v+'</button>'
+  ).join("");
+  const cvInput = f.venue==="직접입력" ?
+    '<input class="finput" id="cv" placeholder="장소 이름" value="'+f.cv+'" style="width:100%;margin-top:6px">' : "";
+
   return '<div class="add-form">' +
     '<div class="form-row"><span class="form-lbl">시간</span>' +
-    '<input class="finput" id="fi-time" placeholder="예: 7-8시, 오전10시" value="'+f.time+'" style="flex:1"></div>' +
-    '<div class="form-row"><span class="form-lbl">테니스장</span>' +
-    '<input class="finput" id="fi-venue" placeholder="장소 이름" value="'+f.venue+'" style="flex:1"></div>' +
+    '<input class="finput" id="fi-time" placeholder="예: 7-9, 15-17" value="'+f.time+'" style="flex:1"></div>' +
+    '<div class="form-row"><span class="form-lbl">코트</span>' +
+    '<input class="finput" id="fi-court" placeholder="번호" value="'+f.court+'" style="width:60px">' +
+    '<span style="font-size:12px;color:#9ca3af;margin-left:6px">번</span></div>' +
+    '<div style="margin-bottom:10px"><div style="font-size:12px;color:#6b7280;margin-bottom:6px">테니스장</div>' +
+    '<div class="chip-group">'+vchips+'</div>'+cvInput+'</div>' +
     '<div style="margin-bottom:10px"><div style="font-size:12px;color:#6b7280;margin-bottom:6px">예약자</div>' +
     '<div class="chip-group">'+mchips+'</div>'+cpInput+'</div>' +
     '<div class="form-actions">' +
@@ -289,7 +299,7 @@ function bind() {
 
   // Add form toggle
   const tf = document.getElementById("toggle-form");
-  if (tf) tf.onclick = () => { S.form=!S.form; S.f={time:"",venue:"",person:MEMBERS[0],cp:""}; render(); };
+  if (tf) tf.onclick = () => { S.form=!S.form; S.f={time:"",venue:VENUES[0],court:"",person:MEMBERS[0],cp:"",cv:""}; render(); };
   const cf = document.getElementById("close-form");
   if (cf) cf.onclick = () => { S.form=false; render(); };
 
@@ -333,17 +343,23 @@ function bind() {
     };
   });
 
+  // Form venue chips
+  document.querySelectorAll("[data-v]").forEach(el => {
+    el.onclick = () => { S.f.venue=el.dataset.v; S.f.cv=""; render(); };
+  });
+
   // Form person chips
   document.querySelectorAll("[data-p]").forEach(el => {
     el.onclick = () => { S.f.person=el.dataset.p; render(); };
   });
 
   // Input sync (keep values while re-rendering)
-  ["fi-time","fi-venue","cp"].forEach(id => {
+  ["fi-time","fi-court","cv","cp"].forEach(id => {
     const el=document.getElementById(id);
     if(el) el.oninput = e => {
       if(id==="fi-time")  S.f.time  = e.target.value;
-      if(id==="fi-venue") S.f.venue = e.target.value;
+      if(id==="fi-court") S.f.court = e.target.value;
+      if(id==="cv")       S.f.cv    = e.target.value;
       if(id==="cp")       S.f.cp    = e.target.value;
     };
   });
@@ -353,19 +369,23 @@ function bind() {
   if (sub) sub.onclick = async () => {
     // sync inputs before reading
     const te=document.getElementById("fi-time");
-    const ve=document.getElementById("fi-venue");
+    const cte=document.getElementById("fi-court");
+    const cve=document.getElementById("cv");
     const ce=document.getElementById("cp");
-    if(te) S.f.time  = te.value;
-    if(ve) S.f.venue = ve.value;
-    if(ce) S.f.cp    = ce.value;
+    if(te)  S.f.time  = te.value;
+    if(cte) S.f.court = cte.value;
+    if(cve) S.f.cv    = cve.value;
+    if(ce)  S.f.cp    = ce.value;
 
     const person = S.f.person==="직접입력" ? S.f.cp.trim() : S.f.person;
-    if (!S.f.time.trim() || !S.f.venue.trim() || !person) return;
+    const venue  = S.f.venue==="직접입력"  ? S.f.cv.trim()  : S.f.venue;
+    if (!S.f.time.trim() || !venue || !person) return;
+    const courtStr = S.f.court.trim() ? S.f.court.trim()+"번 " : "";
 
-    const item = { id: String(Date.now()), date: S.sel, time: S.f.time.trim(), venue: S.f.venue.trim(), person, paid: false, cancelled: false };
+    const item = { id: String(Date.now()), date: S.sel, time: S.f.time.trim(), venue: courtStr+venue, person, paid: false, cancelled: false };
     S.res.push(item);
     S.form=false;
-    S.f={time:"",venue:"",person:MEMBERS[0],cp:""};
+    S.f={time:"",venue:VENUES[0],court:"",person:MEMBERS[0],cp:"",cv:""};
     render();
     await POST("es_reservations", item);
   };
